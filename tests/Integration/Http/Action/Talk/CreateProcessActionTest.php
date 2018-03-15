@@ -41,8 +41,8 @@ final class CreateProcessActionTest extends WebTestCase implements Transactional
                 'category'    => 'other',
                 'desired'     => 0,
                 'user_id'     => $user->id,
-                'token'       => $csrfToken,
-                'token_id'    => 'speaker_talk',
+                'token'       => $csrfToken->getValue(),
+                'token_id'    => 'edit_talk',
             ]);
 
         $this->assertResponseIsRedirect($response);

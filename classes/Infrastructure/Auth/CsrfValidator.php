@@ -34,7 +34,12 @@ final class CsrfValidator implements RequestValidator
     {
         $tokenId    = $request->get('token_id');
         $tokenValue = $request->get('token');
-        $token      = new CsrfToken($tokenId, $tokenValue);
+
+        if ($tokenId === null || $tokenValue === null) {
+            return false;
+        }
+
+        $token = new CsrfToken($tokenId, $tokenValue);
 
         return $this->manager->isTokenValid($token);
     }

@@ -19,6 +19,7 @@ use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use OpenCFP\Domain\Services\RequestValidator;
 use OpenCFP\Infrastructure\Auth\CsrfValidator;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 final class CsrfValidatorTest extends \PHPUnit\Framework\TestCase
@@ -48,10 +49,15 @@ final class CsrfValidatorTest extends \PHPUnit\Framework\TestCase
     public function returnsTrueWhenTokenMangerReturnsTrue()
     {
         $manager = Mockery::mock(CsrfTokenManagerInterface::class);
-        $manager->shouldReceive('isTokenValid')->andReturn(true);
-        $request = Mockery::mock(Request::class);
-        $request->shouldReceive('get')->once()->with('token_id');
-        $request->shouldReceive('get')->once()->with('token');
+        $manager->shouldReceive('isTokenValid')
+            ->withArgs(function (CsrfToken $token) {
+                return $token->getId() === 'some_token'
+                    && $token->getValue() === 'some_value';
+            })->andReturn(true);
+
+        $request = new Request();
+        $request->query->set('token_id', 'some_token');
+        $request->query->set('token', 'some_value');
 
         $csrf = new CsrfValidator($manager);
         $this->assertTrue($csrf->isValid($request));
@@ -64,10 +70,10 @@ final class CsrfValidatorTest extends \PHPUnit\Framework\TestCase
     {
         $manager = Mockery::mock(CsrfTokenManagerInterface::class);
         $manager->shouldReceive('isTokenValid')->andReturn(false);
-        $request = Mockery::mock(Request::class);
 
-        $request->shouldReceive('get')->once()->with('token_id');
-        $request->shouldReceive('get')->once()->with('token');
+        $request = new Request();
+        $request->query->set('token_id', 'some_token');
+        $request->query->set('token', 'some_value');
 
         $csrf = new CsrfValidator($manager);
         $this->assertFalse($csrf->isValid($request));
